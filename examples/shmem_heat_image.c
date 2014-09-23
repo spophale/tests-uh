@@ -112,15 +112,13 @@ main (int argc, char **argv)
   my_number = _my_pe ();
   n_of_nodes = _num_pes ();
 
-  if (argc != 3)
-    {
-      if (!my_number)
-	fprintf (stderr, "Usage: %s <nrows> <ncolumns>\n", argv[0]);
-      return (-1);
-    }
-
-  totalmx = mx = (int) atol (argv[1]);
-  my = (int) atol (argv[2]);
+  if ( argc == 1 ) {
+    totalmx = mx = 10;
+    my = 10;
+  } else if (argc == 3) {
+      totalmx = mx = (int) atol (argv[1]);
+      my = (int) atol (argv[2]);
+  } 
 
   if (my < 1)
     {
