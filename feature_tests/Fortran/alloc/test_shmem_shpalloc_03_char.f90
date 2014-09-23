@@ -39,7 +39,11 @@ program test_shmem_shpalloc
   implicit none
   include 'shmem.fh'
 
-  integer, parameter :: nelems = 1024000000
+!swaroop: 1024000000 words is 4096 MB, why are we imposing a size constraint on
+!heap when it is set via env variable?
+
+!  integer, parameter :: nelems = 1024000000
+  integer, parameter :: nelems = 10
 
   integer*8          :: array_addr
   character           :: array(1)    
