@@ -39,7 +39,15 @@ program test_shmem_shpalloc
   implicit none
   include 'shmem.fh'
 
-  integer, parameter :: nelems = 1024000000
+  !swaroop: 1024000000 words is 4096 MB,
+  !  integer, parameter :: nelems = 1024000000
+
+  ! symmetric heap is set via env variable SMA_SYMMETRIC_SIZE
+  ! there should not be a random size constraint imposed on the heap
+
+  integer            :: symm_size,stat=-2
+  integer, parameter :: nelems 
+
 
   integer*8          :: array_addr
   double precision           :: array(1)    
@@ -56,14 +64,27 @@ program test_shmem_shpalloc
   me = my_pe()
   npes = num_pes()
 
+  ! determine size of nelems
+  call get_environment_variable("SMA_SYMMETRIC_SIZE",symm_size,0,stat)
+  if(stat.eq. 0) then
+    nelems = symm_size/4 !bytes to word
+  else
+    nelems = 10 
+    !swaroop: Assumption here is that symmetric heap is atleast
+    !40bytes  
+  end if
+
   ! allocate remotely accessible block
   call shpalloc(array_addr, nelems, errcode, abort)
 
+!swaroop: Not checking for all error conditions
+!-1 = length < 0,-2 = no memory
+
   if(me .eq. 0) then
-    if(.not.errcode .ne. -1) then
-      write (*,*) TEST_NAME, ': Failed'
-    else
+    if((errcode .ne. -1).and.(errcode.ne.-2)) then
       write (*,*) TEST_NAME, ': Passed'
+    else
+      write (*,*) TEST_NAME, ': Failed'
     end if
   end if
 
