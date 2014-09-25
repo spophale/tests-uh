@@ -33,17 +33,16 @@
 ! NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ! SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
-!
+! This test checks if the OpenSHMEM implementation returns
+! the correct error code when memory requested is more than the 
+! size of the symmetric heap.
 
 program test_shmem_shpalloc
   implicit none
   include 'shmem.fh'
 
-!swaroop: 1024000000 words is 4096 MB, why are we imposing a size constraint on
-!heap when it is set via env variable?
 
-!  integer, parameter :: nelems = 1024000000
-  integer, parameter :: nelems = 10
+  integer*4, parameter :: nelems = 1024000000
 
   integer*8          :: array_addr
   character           :: array(1)    
@@ -60,11 +59,11 @@ program test_shmem_shpalloc
   me = my_pe()
   npes = num_pes()
 
-  ! allocate remotely accessible block
+  ! try to allocate a huge remotely accessible block
   call shpalloc(array_addr, nelems, errcode, abort)
 
   if(me .eq. 0) then
-    if(.not.errcode .ne. -1) then
+    if(errcode .ne. -2) then
       write (*,*) TEST_NAME, ': Failed'
     else
       write (*,*) TEST_NAME, ': Passed'
