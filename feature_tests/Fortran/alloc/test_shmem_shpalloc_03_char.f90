@@ -42,7 +42,7 @@ program test_shmem_shpalloc
   include 'shmem.fh'
 
 
-  integer*4, parameter :: nelems = 1024000000
+  integer, parameter :: nelems = 1024000000
 
   integer*8          :: array_addr
   character           :: array(1)    
