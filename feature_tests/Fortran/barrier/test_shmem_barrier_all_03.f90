@@ -33,7 +33,6 @@
 ! NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ! SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
-!SP: This test if used 'standalone' will hang.
 
 program test_shmem_barrier
   implicit none
@@ -46,7 +45,7 @@ program test_shmem_barrier
   integer*4                :: src
 
   integer, save :: flag
-  integer       :: me, npes, i
+  integer       :: me, npes, i, errcode, abort
 
 ! Function definitions
   integer                   :: my_pe, num_pes
