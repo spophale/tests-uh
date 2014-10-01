@@ -41,11 +41,15 @@ program test_shmem_collects
   integer              :: npes
 
 ! Function definitions
-  integer              :: my_pe, num_pes
+  integer              :: num_pes
   
   call start_pes(0)
   npes = num_pes()
-  call sub1(npes)
+  if(npes .ge. 2) then
+    call sub1(npes)
+  else
+    write (*,*) "This test requires 2 or more PEs." 
+  end if
 
 end program test_shmem_collects
 
@@ -53,7 +57,10 @@ subroutine sub1(npes)
   implicit none
   include 'shmem.fh'
 
-  integer  ::  me
+! Function definitions
+  integer              :: my_pe
+
+  integer              ::  me
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer*8             :: src
@@ -64,18 +71,14 @@ subroutine sub1(npes)
   integer*8            :: dest_addr
   pointer              (dest_addr, dest)
 
-  integer*8             :: dest_expected(npes)
-
   integer, save        :: flag
   integer              :: i
-  logical              :: success
   integer              :: errcode, abort
 
   me   = my_pe()
 
   pSync(:) = SHMEM_SYNC_VALUE
 
-  if(npes .ge. min_npes) then
 
     success = .TRUE.
     flag = 0
@@ -118,9 +121,6 @@ subroutine sub1(npes)
     call shpdeallc (dest_addr, errcode, abort)
     call shpdeallc(src_addr, errcode, abort)
 
-  else
-    write (*,*) "This test requires ", min_npes, " or more PEs." 
-  end if
 
 end subroutine sub1
 
