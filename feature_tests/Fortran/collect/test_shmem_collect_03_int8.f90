@@ -50,7 +50,6 @@ program test_shmem_collects
   else
     write (*,*) "This test requires 2 or more PEs." 
   end if
-
 end program test_shmem_collects
 
 subroutine sub1(npes)
@@ -60,7 +59,7 @@ subroutine sub1(npes)
 ! Function definitions
   integer              :: my_pe
 
-  integer              ::  me
+  integer              :: npes, me
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer*8             :: src
