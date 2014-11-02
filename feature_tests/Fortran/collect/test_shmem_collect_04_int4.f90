@@ -60,7 +60,7 @@ subroutine sub1(npes)
 ! Function definitions
   integer              :: my_pe
 
-  integer              ::  me
+  integer              :: npes, me
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer*8             :: src
@@ -89,7 +89,6 @@ subroutine sub1(npes)
 
     do i = 1,npes,1
       dest(i) = -9
-      dest_expected = -9
     end do
 
     src =  101 + me     !0 contributes 101, 1 contributes 102..
