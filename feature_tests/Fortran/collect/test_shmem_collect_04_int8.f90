@@ -97,8 +97,8 @@ subroutine sub1(npes)
   
 
     !Checking correctness if collect over Active set of all even PEs
-    if(mod(me,2).eq.0)
-      if(mod(npes,2).eq.0)
+    if(mod(me,2).eq.0) then
+      if(mod(npes,2).eq.0) then
         call shmem_collect64(dest, src,1,0,1, npes/2, &
       pSync)
       else
