@@ -39,7 +39,7 @@ program test_shmem_collects
   implicit none
   include 'shmem.fh'
 
-  integer              :: npes
+  integer, parameter              :: npes
 
 ! Function definitions
   integer              :: num_pes
