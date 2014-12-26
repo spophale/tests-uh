@@ -60,15 +60,16 @@ subroutine sub1(npes)
  
 
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
-  integer*4             :: src
-  integer*4             :: dest(npes)
-  integer*4             :: dest_expected(npes)
 
   integer, save        :: flag
-  integer              :: npes, me
+  integer,parameter    :: npes
+  integer              :: me
   integer              :: i, pe, k, tmp
   logical              :: success
   integer              :: errcode, abort
+  integer*4             :: src
+  integer*4             :: dest(npes)
+  integer*4             :: dest_expected(npes)
 
 ! Function definitions
   integer              :: my_pe, num_pes
