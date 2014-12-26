@@ -100,10 +100,10 @@ subroutine sub1(npes)
     !Checking correctness if collect over Active set of all even PEs
     if(mod(me,2).eq.0) then
       if(mod(npes,2).eq.0) then
-        call shmem_fcollect32(dest, src,1,0,1, npes/2, &
+        call shmem_fcollect64(dest, src,1,0,1, npes/2, &
       pSync)
       else
-        call shmem_fcollect32(dest, src,1,0,1, npes/2+1, &
+        call shmem_fcollect64(dest, src,1,0,1, npes/2+1, &
       pSync)
       end if
       do i = 1, npes, 1
@@ -118,9 +118,9 @@ subroutine sub1(npes)
 
     if(me .eq. 0) then
       if(flag .eq. 0) then
-        write(*,*) "Test shmem_fcollect32: Passed"
+        write(*,*) "Test shmem_fcollect64: Passed"
       else
-        write(*,*) "Test shmem_fcollect32: Failed"
+        write(*,*) "Test shmem_fcollect64: Failed"
       end if
     end if 
 

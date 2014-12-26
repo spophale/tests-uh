@@ -118,9 +118,9 @@ subroutine sub1(npes)
 
     if(me .eq. 0) then
       if(flag .eq. 0) then
-        write(*,*) "Test shmem_collect32: Passed"
+        write(*,*) "Test shmem_collect64: Passed"
       else
-        write(*,*) "Test shmem_collect32: Failed"
+        write(*,*) "Test shmem_collect64: Failed"
       end if
     end if 
 
