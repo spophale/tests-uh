@@ -39,7 +39,7 @@ program test_shmem_collects
   implicit none
   include 'shmem.fh'
 
-  integer, parameter              :: npes
+  integer              :: npes
 
 ! Function definitions
   integer              :: num_pes
@@ -62,7 +62,7 @@ subroutine sub1(npes)
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer, save        :: flag
-  integer,parameter    :: npes
+  integer              :: npes
   integer              :: me
   integer              :: i, pe, k, tmp
   logical              :: success
