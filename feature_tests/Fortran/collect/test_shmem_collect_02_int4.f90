@@ -60,7 +60,7 @@ subroutine sub1(npes)
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer, save        :: flag
-  integer              :: npes
+  integer,intent(inout)              :: npes
   integer              :: me
   integer              :: i, pe, k, tmp
   logical              :: success
