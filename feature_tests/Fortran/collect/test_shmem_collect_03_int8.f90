@@ -73,6 +73,7 @@ subroutine sub1(npes)
   integer, save        :: flag
   integer              :: i
   integer              :: errcode, abort
+  logical              :: success
 
   me   = my_pe()
 
