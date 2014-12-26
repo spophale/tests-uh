@@ -59,18 +59,18 @@ subroutine sub1(npes)
   include 'shmem.fh'
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
+  integer*4             :: src
+  integer*4             :: dest(npes)
+  integer*4             :: dest_expected(npes)
   integer, save        :: flag
-  integer,intent(inout)              :: npes
+  integer              :: npes
   integer              :: me
   integer              :: i, pe, k, tmp
   logical              :: success
   integer              :: errcode, abort
-  integer*4             :: src
-  integer*4             :: dest(npes)
-  integer*4             :: dest_expected(npes)
 
 ! Function definitions
-  integer              :: my_pe, num_pes
+  integer              :: my_pe
   common /globalvars/ src, dest
 
   me   = my_pe()
@@ -82,7 +82,7 @@ subroutine sub1(npes)
 
   do i = 1, npes, 1
     dest(i) = -9
-    dest_expected = 100+i-1
+    dest_expected(i) = 100+i-1
   end do
 
   src =  100 + me
@@ -95,9 +95,7 @@ subroutine sub1(npes)
 
   do i = 1, npes, 1
     if(dest(i) .ne. dest_expected(i)) then
-      if(me .ne. 0) then
         call shmem_int4_inc(flag, 0)
-      end if
     end if
   end do
 
