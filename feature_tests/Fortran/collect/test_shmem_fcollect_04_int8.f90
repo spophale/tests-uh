@@ -34,101 +34,93 @@
 ! SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
 !
-
 program test_shmem_collects
   implicit none
   include 'shmem.fh'
  
+  integer              :: npes
 
+! Function definitions
+  integer              :: num_pes
+  
+  call start_pes(0)
+  npes = num_pes()
+  if(npes .ge. 2) then
+    call sub1(npes)
+  else
+    write (*,*) "This test requires 2 or more PEs." 
+  end if
+
+end program test_shmem_collects
+
+subroutine sub1(npes)
+  implicit none
+  include 'shmem.fh'
+
+! Function definitions
+  integer              :: my_pe
+
+  integer              :: npes, me
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
-  integer,   parameter :: min_npes = 2
-  integer,   parameter :: nelems = 10 
-  integer,   parameter :: dest_nelems = nelems * min_npes ! assuming 2 pes ( 2 x 4 elements)
-
-  integer*8             :: src(nelems)
+  integer*8             :: src
   integer*8            :: src_addr
   pointer              (src_addr, src)
 
-  integer*8             :: dest(target_nelems)
+  integer*8             :: dest(npes)
   integer*8            :: dest_addr
   pointer              (dest_addr, dest)
 
-  integer*8             :: dest_expected(target_nelems)
-
   integer, save        :: flag
-  integer              :: npes, me
-  integer              :: i, pe, k
-  logical              :: success
-  integer              :: collect_nelems
+  integer              :: i
   integer              :: errcode, abort
-
-! Function definitions
-  integer              :: my_pe, num_pes
+  logical              :: success
   
-
-  call start_pes(0)
-
-  npes = num_pes()
   me   = my_pe()
 
   pSync(:) = SHMEM_SYNC_VALUE
 
-  if(npes .ge. min_npes) then
 
     success = .TRUE.
     flag = 0
 
-    call shpalloc (dest_addr, target_nelems, errcode, abort)
-    call shpalloc(src_addr, nelems, errcode, abort)
+    call shpalloc (dest_addr, npes, errcode, abort)
+    call shpalloc(src_addr, 1, errcode, abort) !every PE contributes one element
 
-    collect_nelems = nelems / npes
 
-    do i = 1, dest_nelems, 1
+    do i = 1,npes,1
       dest(i) = -9
-      dest_expected = -9
     end do
 
-    do i = 1, nelems, 1
-      src(i) = i * 100 + me
-    end do
-    
-    k = 1
-    do pe = 0, npes - 1, 1
-      do i = 1, collect_nelems, 1
-        dest_expected(k) = i * 100 + pe  
-        k = k + 1
-      end do
-    end do
+    src =  101 + me     !0 contributes 101, 1 contributes 102..
     
     call shmem_barrier_all()
+  
 
-! Force that some of the PEs are left out of the operation (for this test)
-    if(me .ne. 0) then 
-      call shmem_fcollect64(dest, src, collect_nelems, &
-        0, 0, npes, &
-        pSync)
-    end if
-
-    do i = 1, collect_nelems * npes, 1
-      if(dest(i) .ne. target_expected(i)) then
-        if(me .ne. 0) then
-          call shmem_int4_inc(flag, 0)
-        end if
+    !Checking correctness if collect over Active set of all even PEs
+    if(mod(me,2).eq.0) then
+      if(mod(npes,2).eq.0) then
+        call shmem_fcollect32(dest, src,1,0,1, npes/2, &
+      pSync)
+      else
+        call shmem_fcollect32(dest, src,1,0,1, npes/2+1, &
+      pSync)
       end if
-    end do
+      do i = 1, npes, 1
+        if(dest(i) .ne. (100+i)) then
+            call shmem_int4_inc(flag, 0)
+        end if
+      end do
+  
+    end if
 
     call shmem_barrier_all()
 
     if(me .eq. 0) then
-      if(flag .ne. 0) then
-        success = .FALSE.
-      end if
-
-      if(success .eqv. .TRUE.) then
-        write(*,*) "Test shmem_collect32: Passed"
+      if(flag .eq. 0) then
+        write(*,*) "Test shmem_fcollect32: Passed"
       else
-        write(*,*) "Test shmem_collect32: Failed"
+        write(*,*) "Test shmem_fcollect32: Failed"
       end if
     end if 
 
@@ -137,8 +129,7 @@ program test_shmem_collects
     call shpdeallc (dest_addr, errcode, abort)
     call shpdeallc(src_addr, errcode, abort)
 
-  else
-    write (*,*) "This test requires ", min_npes, " or more PEs." 
-  end if
 
-end program test_shmem_collects
+end subroutine sub1
+
+
