@@ -38,104 +38,84 @@
 program test_shmem_collects
   implicit none
   include 'shmem.fh'
+
+  integer              :: npes
+
+! Function definitions
+  integer              :: num_pes
+
+  call start_pes(0)
+  npes = num_pes()
+  if(npes .ge. 2) then
+    call sub1(npes)
+  else
+    write (*,*) "This test requires 2 or more PEs."
+  end if
+
+end program test_shmem_collects
+
+subroutine sub1(npes)
+  implicit none
+  include 'shmem.fh'
  
 
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
-
-  integer,   parameter :: min_npes = 2
-  integer,   parameter :: nelems = 10 
-  integer,   parameter :: dest_nelems = nelems * min_npes ! assuming 2 pes ( 2 x 4 elements)
-
-  integer*4             :: src(nelems)
-  integer*4             :: dest(target_nelems)
-  integer*4             :: dest_expected(target_nelems)
+  integer*4             :: src
+  integer*4             :: dest(npes)
+  integer*4             :: dest_expected(npes)
 
   integer, save        :: flag
   integer              :: npes, me
   integer              :: i, pe, k, tmp
   logical              :: success
-  integer              :: collect_nelems
   integer              :: errcode, abort
 
 ! Function definitions
   integer              :: my_pe, num_pes
-  
-
   common /globalvars/ src, dest
 
-  call start_pes(0)
-
-  npes = num_pes()
   me   = my_pe()
 
   pSync(:) = SHMEM_SYNC_VALUE
 
-  if(npes .ge. min_npes) then
+  success = .TRUE.
+  flag = 0
 
-    success = .TRUE.
-    flag = 0
+  do i = 1, npes, 1
+    dest(i) = -9
+    dest_expected = 100+i-1
+  end do
 
-! The number of elements to collect from each PE
-    collect_nelems = nelems / npes
+  src =  100 + me
 
-    do i = 1, dest_nelems, 1
-      dest(i) = -9
-      dest_expected = -9
-    end do
+  call shmem_barrier_all()
 
-    do i = 1, nelems, 1
-      src(i) = i * 100 + me
-    end do
-    
-    k = 1
-    do pe = 0, npes - 1, 1
-      if(mod(pe, 2) == 0) then
-        tmp = collect_nelems + 1
-      else
-        tmp = collect_nelems
+  call shmem_collect32(dest, src,1, &
+    0, 0, npes, &
+    pSync)
+
+  do i = 1, npes, 1
+    if(dest(i) .ne. target_expected(i)) then
+      if(me .ne. 0) then
+        call shmem_int4_inc(flag, 0)
       end if
-      do i = 1, collect_nelems, 1
-        dest_expected(k) = i * 100 + pe  
-        k = k + 1
-      end do
-    end do
+    end if
+  end do
 
-    if(mod(pe, 2) == 0) then 
-      collect_nelems = collect_nelems + 1
+  call shmem_barrier_all()
+
+  if(me .eq. 0) then
+    if(flag .ne. 0) then
+      success = .FALSE.
     end if
 
-    call shmem_barrier_all()
+    if(success .eqv. .TRUE.) then
+      write(*,*) "Test shmem_collect32: Passed"
+    else
+      write(*,*) "Test shmem_collect32: Failed"
+    end if
+  end if 
 
-    call shmem_collect32(dest, src, collect_nelems, &
-      0, 0, npes, &
-      pSync)
+  call shmem_barrier_all()
 
-    do i = 1, collect_nelems * npes, 1
-      if(dest(i) .ne. target_expected(i)) then
-        if(me .ne. 0) then
-          call shmem_int4_inc(flag, 0)
-        end if
-      end if
-    end do
-
-    call shmem_barrier_all()
-
-    if(me .eq. 0) then
-      if(flag .ne. 0) then
-        success = .FALSE.
-      end if
-
-      if(success .eqv. .TRUE.) then
-        write(*,*) "Test shmem_collect32: Passed"
-      else
-        write(*,*) "Test shmem_collect32: Failed"
-      end if
-    end if 
-
-    call shmem_barrier_all()
-
-  else
-    write (*,*) "This test requires ", min_npes, " or more PEs." 
-  end if
-
-end program test_shmem_collects
+end subroutine sub1
