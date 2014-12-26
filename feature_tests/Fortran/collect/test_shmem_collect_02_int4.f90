@@ -57,8 +57,6 @@ end program test_shmem_collects
 subroutine sub1(npes)
   implicit none
   include 'shmem.fh'
- 
-
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer, save        :: flag
@@ -96,7 +94,7 @@ subroutine sub1(npes)
     pSync)
 
   do i = 1, npes, 1
-    if(dest(i) .ne. target_expected(i)) then
+    if(dest(i) .ne. dest_expected(i)) then
       if(me .ne. 0) then
         call shmem_int4_inc(flag, 0)
       end if
