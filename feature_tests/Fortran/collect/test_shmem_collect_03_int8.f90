@@ -88,7 +88,6 @@ subroutine sub1(npes)
 
     do i = 1,npes,1
       dest(i) = -9
-      dest_expected = -9
     end do
 
     src =  101 + me     !0 contributes 101, 1 contributes 102..
