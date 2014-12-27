@@ -50,7 +50,7 @@ program test_shmem_collects
 
   integer, save        :: flag
   integer              :: npes, me
-  integer              :: i, pe, k
+  integer              :: i, j, pe, k
   logical              :: success
   integer              :: collect_nelems
   integer              :: tmp
@@ -74,7 +74,7 @@ program test_shmem_collects
       dest(i) = -9
     end do
 
-    do i = 1,3, 1
+    do i = 1,2, 1
       src(i) = 100 + me
     end do
     
@@ -86,13 +86,13 @@ program test_shmem_collects
       0, 0, 2, &
       pSync)
 
-    do i = 1, npes, 1
-      do j = 1, i, 1
-        if(dest(i) .ne.(100+i-1)) then
-          call shmem_int4_inc(flag, 0)
-        end if
+      do i = 1, 2, 1
+        do j = 1, i, 1
+          if(dest(i) .ne.(100+i-1)) then
+            call shmem_int4_inc(flag, 0)
+          end if
+        end do
       end do
-    end do
     end if
 
     call shmem_barrier_all()
@@ -103,9 +103,9 @@ program test_shmem_collects
       end if
 
       if(success .eqv. .TRUE.) then
-        write(*,*) "Test shmem_collect32: Passed"
+        write(*,*) "Test shmem_collect32 with save variables: Passed"
       else
-        write(*,*) "Test shmem_collect32: Failed"
+        write(*,*) "Test shmem_collect32 with save variables: Failed"
       end if
     end if 
 
