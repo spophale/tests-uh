@@ -100,7 +100,7 @@ program test_shmem_collects
       pSync)
 
       do i = 1, dest_nelems * npes, 1
-        if(dest(i) .ne. target_expected(i)) then
+        if(dest(i) .ne. dest_expected(i)) then
           if(me .ne. 0) then
             call shmem_int4_inc(flag, 0)
           end if
