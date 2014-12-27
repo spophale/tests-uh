@@ -64,11 +64,11 @@ subroutine sub1(npes)
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer*4             :: src
-  integer*4            :: src_addr
+  integer*8            :: src_addr
   pointer              (src_addr, src)
 
   integer*4             :: dest(npes)
-  integer*4            :: dest_addr
+  integer*8            :: dest_addr
   pointer              (dest_addr, dest)
 
   integer, save        :: flag
