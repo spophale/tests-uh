@@ -33,7 +33,7 @@
 ! NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ! SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
-!
+!Modified so that only PEs 0 and 1 do a collect.
 
 program test_shmem_collects
   implicit none
@@ -43,12 +43,10 @@ program test_shmem_collects
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer,   parameter :: min_npes = 2
-  integer,   parameter :: nelems = 10 
-  integer,   parameter :: dest_nelems = nelems * min_npes ! assuming 2 pes ( 2 x 4 elements)
+  integer,   parameter :: nelems = 3 
 
-  integer*8,       save :: src(nelems)
-  integer*8,       save :: dest(target_nelems)
-  integer*8             :: dest_expected(target_nelems)
+  integer*8,       save :: src(2)
+  integer*8,       save :: dest(nelems)
 
   integer, save        :: flag
   integer              :: npes, me
@@ -60,10 +58,7 @@ program test_shmem_collects
 
 ! Function definitions
   integer              :: my_pe, num_pes
-  
-
   call start_pes(0)
-
   npes = num_pes()
   me   = my_pe()
 
@@ -74,49 +69,31 @@ program test_shmem_collects
     success = .TRUE.
     flag = 0
 
-    ! The number of elements to collect from each PE
-    collect_nelems = nelems / npes
-
-    do i = 1, dest_nelems, 1
-      dest(i) = -9
-      dest_expected = -9
-    end do
 
     do i = 1, nelems, 1
-      src(i) = i * 100 + me
-    end do
-    
-    k = 1
-    do pe = 0, npes - 1, 1
-      if(mod(pe, 2) == 0) then
-        tmp = collect_nelems + 1
-      else
-        tmp = collect_nelems
-      end if
-      do i = 1, tmp, 1
-        dest_expected(k) = i * 100 + pe  
-        k = k + 1
-      end do
+      dest(i) = -9
     end do
 
-    ! shmem_collect accepts nelems to vary on each PE, force different values for nelems.
-    if(mod(me, 2) == 0) then
-      collect_nelems = collect_nelems + 1
-    end if
+    do i = 1,3, 1
+      src(i) = 100 + me
+    end do
+    
     
     call shmem_barrier_all()
 
-    call shmem_collect64(dest, src, collect_nelems, &
-      0, 0, npes, &
+    if(me.lt.2) then
+      call shmem_collect64(dest, src, me+1, &
+      0, 0, 2, &
       pSync)
 
-    do i = 1, collect_nelems * npes, 1
-      if(dest(i) .ne. target_expected(i)) then
-        if(me .ne. 0) then
+    do i = 1, npes, 1
+      do j = 1, i, 1
+        if(dest(i) .ne.(100+i-1)) then
           call shmem_int4_inc(flag, 0)
         end if
-      end if
+      end do
     end do
+    end if
 
     call shmem_barrier_all()
 
