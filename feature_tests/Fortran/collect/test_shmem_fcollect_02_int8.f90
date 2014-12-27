@@ -43,12 +43,12 @@ program test_shmem_collects
   integer,        save :: pSync(SHMEM_COLLECT_SYNC_SIZE)
 
   integer,   parameter :: min_npes = 2
-  integer,   parameter :: nelems = 10 
+  integer,   parameter :: nelems = 4 
   integer,   parameter :: dest_nelems = nelems * min_npes ! assuming 2 pes ( 2 x 4 elements)
 
   integer*8             :: src(nelems)
-  integer*8             :: dest(target_nelems)
-  integer*8             :: dest_expected(target_nelems)
+  integer*8             :: dest(dest_nelems)
+  integer*8             :: dest_expected(dest_nelems)
 
   integer, save        :: flag
   integer              :: npes, me
@@ -75,11 +75,9 @@ program test_shmem_collects
     success = .TRUE.
     flag = 0
 
-    collect_nelems = nelems / npes
 
     do i = 1, dest_nelems, 1
       dest(i) = -9
-      dest_expected = -9
     end do
 
     do i = 1, nelems, 1
@@ -87,8 +85,8 @@ program test_shmem_collects
     end do
     
     k = 1
-    do pe = 0, npes - 1, 1
-      do i = 1, collect_nelems, 1
+    do pe = 0, 2, 1
+      do i = 1, nelems, 1
         dest_expected(k) = i * 100 + pe  
         k = k + 1
       end do
@@ -96,31 +94,33 @@ program test_shmem_collects
     
     call shmem_barrier_all()
 
-    call shmem_fcollect64(dest, src, collect_nelems, &
-      0, 0, npes, &
+    if(me.lt.2) then
+      call shmem_fcollect64(dest, src, nelems, &
+      0, 0, 2, &
       pSync)
 
-    do i = 1, collect_nelems * npes, 1
-      if(dest(i) .ne. target_expected(i)) then
-        if(me .ne. 0) then
-          call shmem_int4_inc(flag, 0)
+      do i = 1, dest_nelems * npes, 1
+        if(dest(i) .ne. target_expected(i)) then
+          if(me .ne. 0) then
+            call shmem_int4_inc(flag, 0)
+          end if
         end if
-      end if
-    end do
+      end do
 
-    call shmem_barrier_all()
+      call shmem_barrier_all()
 
-    if(me .eq. 0) then
-      if(flag .ne. 0) then
-        success = .FALSE.
-      end if
+      if(me .eq. 0) then
+        if(flag .ne. 0) then
+          success = .FALSE.
+        end if
 
-      if(success .eqv. .TRUE.) then
-        write(*,*) "Test shmem_collect32: Passed"
-      else
-        write(*,*) "Test shmem_collect32: Failed"
-      end if
-    end if 
+        if(success .eqv. .TRUE.) then
+          write(*,*) "Test shmem_fcollect64 with common variables: Passed"
+        else
+          write(*,*) "Test shmem_fcollect64 with common variables: Failed"
+        end if
+      end if 
+    end if
 
     call shmem_barrier_all()
 
